@@ -13,6 +13,7 @@ CHECK_INTERVAL = 60
 LOG_FILE = "status_log.txt"
 
 last_status = None
+last_change_time = datetime.now()
 
 #logging
 def log_message(message):
@@ -85,7 +86,7 @@ def status_loop():
 
             log_message(f"Status changed to: {current_status.upper()}")
 
-            last_status = None
+            last_status = current_status
             last_change_time = datetime.now()
 
         # Heartbeat log every hour
