@@ -31,21 +31,30 @@ def send_discord_message(message):
 def status_loop():
     global last_status, last_change_time
     last_heartbeat = datetime.now()
+
     while True:
         try:
             server = JavaServer.lookup(SERVER_ADDRESS)
+            status_ok = False
+            query_ok = False
+            current_status = "offline"
+
             # check server status (ping server)
             try:
                 status = server.status()
-                status_ok = True
+                if status.latency < 5000:  # avoid false positives from timeout
+                    status_ok = True
             except Exception:
                 status_ok = False
+
             # check server query (joinable)
             try:
                 query = server.query()
-                query_ok = True
+                if query.players.online >= 0:
+                    query_ok = True
             except Exception:
                 query_ok = False
+
             # logic status
             if not status_ok and not query_ok:
                 current_status = "offline"
@@ -53,18 +62,20 @@ def status_loop():
                 current_status = "booting"
             else:
                 current_status = "online"
+
         except Exception:
             current_status = "offline"
 
+        # Only send Discord message when status changes
         if last_status != current_status:
             now = datetime.now()
             uptime = now - last_change_time
-            
+
             if last_status == "online":
                 duration = f"🕓 Server was up for {uptime.seconds // 3600}h {(uptime.seconds % 3600) // 60}m"
             else:
                 duration = ""
-            
+
             if current_status == "online":
                 send_discord_message("✅ **Minecraft server ONLINE**")
             elif current_status == "booting":
@@ -76,13 +87,14 @@ def status_loop():
 
             last_status = current_status
             last_change_time = now
-        
+
         # Heartbeat log every hour
         if (datetime.now() - last_heartbeat).seconds >= 3600:
             log_message(f"Heartbeat: still {current_status.upper()}")
             last_heartbeat = datetime.now()
-        
+
         time.sleep(CHECK_INTERVAL)
+
 
 # --- FLASK WEB SERVER ---
 app = Flask(__name__)
