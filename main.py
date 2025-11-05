@@ -30,6 +30,7 @@ def send_discord_message(message):
 
 def status_loop():
     global last_status, last_change_time
+    last_heartbeat = datetime.now()
     while True:
         try:
             server = JavaServer.lookup(SERVER_ADDRESS)
@@ -54,18 +55,33 @@ def status_loop():
                 current_status = "online"
         except Exception:
             current_status = "offline"
-    
+
         if last_status != current_status:
+            now = datetime.now()
+            uptime = now - last_change_time
+            
+            if last_status == "online":
+                duration = f"🕓 Server was up for {uptime.seconds // 3600}h {(uptime.seconds % 3600) // 60}m"
+            else:
+                duration = ""
+            
             if current_status == "online":
                 send_discord_message("✅ **Minecraft server ONLINE**")
             elif current_status == "booting":
                 send_discord_message("⚙️ **Server is BOOTING UP**")
             elif current_status == "offline":
                 send_discord_message("⛔ **Minecraft server OFFLINE**")
-                
+
             log_message(f"Status changed to: {current_status.upper()}")
-    
-        last_status = current_status
+
+            last_status = current_status
+            last_change_time = now
+        
+        # Heartbeat log every hour
+        if (datetime.now() - last_heartbeat).seconds >= 3600:
+            log_message(f"Heartbeat: still {current_status.upper()}")
+            last_heartbeat = datetime.now()
+        
         time.sleep(CHECK_INTERVAL)
 
 # --- FLASK WEB SERVER ---
