@@ -4,7 +4,10 @@ from mcstatus import JavaServer
 from datetime import datetime
 import os
 
-SERVER_ADDRESS = "EpicX08.aternos.me"
+import threading
+from flask import Flask
+
+SERVER_ADDRESS = os.getenv("SERVER_ADDRESS")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 CHECK_INTERVAL = 60  
 LOG_FILE = "status_log.txt"
