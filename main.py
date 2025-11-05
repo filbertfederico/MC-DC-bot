@@ -85,8 +85,8 @@ def status_loop():
 
             log_message(f"Status changed to: {current_status.upper()}")
 
-            last_status = current_status
-            last_change_time = now
+            last_status = None
+            last_change_time = datetime.now()
 
         # Heartbeat log every hour
         if (datetime.now() - last_heartbeat).seconds >= 3600:
